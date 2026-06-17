@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>python-openhab-rest-client · Testsuite</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #1e2327;
+      --surface:   #262c31;
+      --surface2:  #2e363c;
+      --border:    #3a444c;
+      --accent:    #f18a00;
+      --accent2:   #e07000;
+      --text:      #d4dde4;
+      --text-dim:  #7a8b96;
+      --green:     #4caf50;
+      --red:       #f44336;
+      --yellow:    #ffb300;
+      --blue:      #2196f3;
+      --radius:    6px;
+      --sidebar-w: 220px;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .logo span { color: var(--text); }
+
+    /* Backend-URL Row */
+    .backend-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+    .backend-row input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 3px 8px;
+      font-size: 11px;
+      width: 300px;
+    }
+    .backend-row input:focus { outline: none; border-color: var(--accent); }
+
+    /* Connect Row */
+    .connect-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .connect-row input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 5px 8px;
+      font-size: 12px;
+      outline: none;
+    }
+    .connect-row input:focus { border-color: var(--accent); }
+    #urlInput   { width: 200px; }
+    #userInput,
+    #passInput  { width: 110px; }
+    #tokenInput { width: 200px; }
+
+    .btn {
+      padding: 5px 14px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: var(--accent2); }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-danger:hover { background: #a93226; }
+    .btn-sm { padding: 3px 10px; font-size: 11px; }
+
+    #connStatus {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text-dim);
+      margin-left: 4px;
+    }
+    #connDot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex-shrink: 0;
+    }
+    #connDot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    #connDot.err { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+    /* ── Main ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    aside h3 {
+      padding: 10px 12px 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+    }
+    .class-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 7px 14px;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      border-left: 3px solid transparent;
+      transition: background .1s, border-color .1s;
+    }
+    .class-btn:hover  { background: var(--surface2); }
+    .class-btn.active { background: var(--surface2); border-left-color: var(--accent); color: var(--accent); }
+
+    /* ── Content ── */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Method Panel ── */
+    .method-panel {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field label { font-size: 10px; color: var(--text-dim); }
+    .method-panel select,
+    .method-panel input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .method-panel select:focus,
+    .method-panel input:focus { outline: none; border-color: var(--accent); }
+    #argsInput { width: 260px; font-family: 'Consolas', monospace; }
+
+    /* ── Output ── */
+    .output-header {
+      display: flex;
+      align-items: center;
+      padding: 5px 14px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .output-header .title { font-size: 11px; font-weight: 700; color: var(--text-dim); }
+    .counter {
+      font-size: 10px; color: var(--text-dim);
+      margin-left: auto;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .counter span { display: flex; align-items: center; gap: 3px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .dot-ok   { background: var(--green); }
+    .dot-err  { background: var(--red); }
+    .dot-pend { background: var(--yellow); }
+
+    #output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+    .entry {
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      border-left: 3px solid var(--border);
+      background: var(--surface);
+    }
+    .entry.ok   { border-left-color: var(--green); }
+    .entry.err  { border-left-color: var(--red); }
+    .entry.info { border-left-color: var(--blue); }
+    .entry.sse  { border-left-color: var(--yellow); }
+    .entry .ts  { color: var(--text-dim); font-size: 10px; margin-right: 6px; }
+    .entry .lbl { font-weight: 700; margin-right: 6px; }
+    .entry.ok  .lbl { color: var(--green); }
+    .entry.err .lbl { color: var(--red); }
+    .entry.info .lbl{ color: var(--blue); }
+    .entry.sse .lbl { color: var(--yellow); }
+    .entry pre {
+      white-space: pre-wrap; word-break: break-all;
+      color: var(--text); margin-top: 3px; font-size: 11px;
+    }
+
+    /* ── SSE Bar ── */
+    .sse-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .sse-bar select,
+    .sse-bar input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .sse-label { font-size: 11px; color: var(--text-dim); }
+    #sseStatus { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+    #sseStatus.active { color: var(--yellow); }
+
+    .placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; color: var(--text-dim); gap: 8px;
+    }
+    .placeholder svg { opacity: .3; }
+    .placeholder p { font-size: 13px; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">openHAB REST <span>python-openhab-rest-client</span></div>
+    <div id="connStatus">
+      <div id="connDot"></div>
+      <span id="connLabel">Getrennt</span>
+    </div>
+  </div>
+
+  <!-- Backend-URL (Render.com) -->
+  <div class="backend-row">
+    <span>Backend (Render.com):</span>
+    <input id="backendUrl" type="text"
+           value="https://python-openhab-rest-client-test-app.onrender.com"
+           placeholder="https://deine-app.onrender.com" />
+    <span style="color:var(--text-dim);font-size:10px">← deine Render-URL eintragen</span>
+  </div>
+
+  <!-- openHAB-Verbindung -->
+  <div class="connect-row">
+    <input id="urlInput"   type="text"     placeholder="openHAB URL"
+           value="https://home.myopenhab.org" />
+    <input id="userInput"  type="text"     placeholder="myopenhab Username" />
+    <input id="passInput"  type="password" placeholder="myopenhab Password" />
+    <input id="tokenInput" type="text"     placeholder="API Token (alternativ zu User/Pass)" />
+    <button class="btn btn-accent" onclick="doConnect()">Verbinden</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <aside>
+    <h3>REST-Klassen</h3>
+    <div id="classList">
+      <p style="padding:12px;color:var(--text-dim);font-size:11px">Bitte zuerst verbinden.</p>
+    </div>
+  </aside>
+
+  <div class="content">
+
+    <div class="method-panel" id="methodPanel" style="display:none">
+      <div class="field">
+        <label>Methode</label>
+        <select id="methodSelect"></select>
+      </div>
+      <div class="field">
+        <label>Argumente (JSON-Array)</label>
+        <input id="argsInput" type="text" placeholder='z.B. ["MyItem", "ON"]' value="[]" />
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-accent btn-sm" onclick="runMethod()">▶ Ausführen</button>
+        <button class="btn btn-sm" style="background:var(--surface);border:1px solid var(--border)"
+                onclick="runTest()">🧪 Test</button>
+      </div>
+      <div class="field">
+        <label>Test-Methode</label>
+        <select id="testMethodSelect"></select>
+      </div>
+    </div>
+
+    <div class="output-header">
+      <span class="title">Ausgabe</span>
+      <button class="btn btn-sm btn-danger" onclick="clearOutput()">✕ Leeren</button>
+      <div class="counter">
+        <span>Tests: <b id="cTotal">0</b></span>
+        <span><div class="dot dot-ok"></div><b id="cOk">0</b></span>
+        <span><div class="dot dot-err"></div><b id="cErr">0</b></span>
+        <span><div class="dot dot-pend"></div><b id="cPend">0</b></span>
+      </div>
+    </div>
+
+    <div id="output">
+      <div class="placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <p>Klasse aus der Seitenleiste wählen</p>
+      </div>
+    </div>
+
+    <div class="sse-bar">
+      <span class="sse-label">SSE Livestream</span>
+      <select id="sseTypeSelect"></select>
+      <select id="sseMethodSelect"></select>
+      <input id="sseArgs" type="text" placeholder="SSE-Args []" value="[]" style="width:120px"/>
+      <button class="btn btn-accent btn-sm" onclick="startSSE()">▶ Start</button>
+      <button class="btn btn-sm btn-danger" onclick="stopSSE()">■ Stop</button>
+      <span id="sseStatus">● Inaktiv</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Konfiguration ─────────────────────────────────────────────────────────────
+const backend = () => document.getElementById("backendUrl").value.replace(/\/$/, "");
+
+const SSE_METHODS = {
+  ItemEvents:    ["ItemEvent","ItemAddedEvent","ItemRemovedEvent","ItemUpdatedEvent",
+                  "ItemCommandEvent","ItemStateEvent","ItemStatePredictedEvent","ItemStateChangedEvent"],
+  ThingEvents:   ["ThingAddedEvent","ThingRemovedEvent","ThingUpdatedEvent",
+                  "ThingStatusInfoEvent","ThingStatusInfoChangedEvent"],
+  InboxEvents:   ["InboxAddedEvent","InboxRemovedEvent","InboxUpdatedEvent"],
+  LinkEvents:    ["ItemChannelLinkAddedEvent","ItemChannelLinkRemovedEvent"],
+  ChannelEvents: ["ChannelDescriptionChangedEvent","ChannelTriggeredEvent"],
+  Events:        ["getAllEvents"],
+};
+
+let classData   = {};
+let activeClass = null;
+let sseSource   = null;
+let counters    = { total: 0, ok: 0, err: 0, pend: 0 };
+
+// ── Connect ───────────────────────────────────────────────────────────────────
+async function doConnect() {
+  const url   = document.getElementById("urlInput").value.trim();
+  const user  = document.getElementById("userInput").value.trim();
+  const pass  = document.getElementById("passInput").value;
+  const token = document.getElementById("tokenInput").value.trim();
+
+  setConnStatus("", "Verbinde…");
+  try {
+    const r = await fetch(backend() + "/api/connect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url,
+        username: user  || null,
+        password: pass  || null,
+        token:    token || null,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.statusText);
+    setConnStatus("ok", `Verbunden · UUID: ${d.uuid}`);
+    await loadClasses();
+  } catch (e) {
+    setConnStatus("err", "Fehler: " + e.message);
+    log("err", "Verbindungsfehler", String(e));
+  }
+}
+
+function setConnStatus(state, msg) {
+  document.getElementById("connDot").className   = state;
+  document.getElementById("connLabel").textContent = msg;
+}
+
+// ── Klassen ───────────────────────────────────────────────────────────────────
+async function loadClasses() {
+  const r = await fetch(backend() + "/api/classes");
+  classData = await r.json();
+
+  const list = document.getElementById("classList");
+  list.innerHTML = "";
+  Object.keys(classData).sort().forEach(cls => {
+    const btn = document.createElement("button");
+    btn.className = "class-btn";
+    btn.textContent = cls;
+    btn.onclick = () => selectClass(cls, btn);
+    list.appendChild(btn);
+  });
+
+  initSseSelects();
+}
+
+function selectClass(cls, btn) {
+  document.querySelectorAll(".class-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeClass = cls;
+
+  fillSelect("methodSelect",     classData[cls].methods);
+  fillSelect("testMethodSelect", classData[cls].testMethods);
+  document.getElementById("methodPanel").style.display = "flex";
+  clearOutput();
+  log("info", "Klasse", `${cls} – ${classData[cls].methods.length} Methoden`);
+}
+
+function fillSelect(id, items) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = "";
+  items.forEach(m => {
+    const o = document.createElement("option");
+    o.value = o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+// ── Methode / Test ───────────────────────────────────────────────────────────
+async function runMethod() {
+  if (!activeClass) return;
+  const method = document.getElementById("methodSelect").value;
+  let args;
+  try { args = JSON.parse(document.getElementById("argsInput").value || "[]"); }
+  catch(e) { log("err","Args-Fehler", e.message); return; }
+
+  counters.pend++; updateCounters();
+  log("info", `▶ ${activeClass}.${method}`, JSON.stringify(args));
+
+  try {
+    const r = await fetch(backend() + "/api/call", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ class: activeClass, method, args }),
+    });
+    const d = await r.json();
+    counters.pend--;
+    if (d.error) {
+      counters.err++; updateCounters();
+      log("err", "Fehler", d.error + (d.trace ? "\n" + d.trace : ""));
+    } else {
+      counters.ok++; updateCounters();
+      log("ok", "✓ Ergebnis", JSON.stringify(d.result, null, 2));
+    }
+  } catch(e) {
+    counters.pend--; counters.err++; updateCounters();
+    log("err","Netzwerkfehler", e.message);
+  }
+}
+
+async function runTest() {
+  if (!activeClass) return;
+  const method = document.getElementById("testMethodSelect").value;
+  let args;
+  try { args = JSON.parse(document.getElementById("argsInput").value || "[]"); }
+  catch(e) { log("err","Args-Fehler", e.message); return; }
+
+  counters.total++; counters.pend++; updateCounters();
+  log("info", `🧪 ${activeClass}.${method}`, JSON.stringify(args));
+
+  try {
+    const r = await fetch(backend() + "/api/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ class: activeClass, method, args }),
+    });
+    const d = await r.json();
+    counters.pend--;
+    if (d.error) {
+      counters.err++; updateCounters();
+      log("err","✗ Test fehlgeschlagen", d.error);
+    } else {
+      counters.ok++; updateCounters();
+      log("ok","✓ Test bestanden", JSON.stringify(d.result ?? "(kein Rückgabewert)", null, 2));
+    }
+  } catch(e) {
+    counters.pend--; counters.err++; updateCounters();
+    log("err","Netzwerkfehler", e.message);
+  }
+}
+
+// ── SSE ───────────────────────────────────────────────────────────────────────
+function initSseSelects() {
+  const typeEl   = document.getElementById("sseTypeSelect");
+  const methodEl = document.getElementById("sseMethodSelect");
+  typeEl.innerHTML = "";
+  Object.keys(SSE_METHODS).forEach(t => {
+    const o = document.createElement("option");
+    o.value = o.textContent = t;
+    typeEl.appendChild(o);
+  });
+  typeEl.onchange = () => {
+    methodEl.innerHTML = "";
+    (SSE_METHODS[typeEl.value] || []).forEach(m => {
+      const o = document.createElement("option");
+      o.value = o.textContent = m;
+      methodEl.appendChild(o);
+    });
+  };
+  typeEl.dispatchEvent(new Event("change"));
+}
+
+function startSSE() {
+  stopSSE();
+  const type   = document.getElementById("sseTypeSelect").value;
+  const method = document.getElementById("sseMethodSelect").value;
+  const args   = encodeURIComponent(document.getElementById("sseArgs").value || "[]");
+  const url    = `${backend()}/api/sse?type=${type}&method=${method}&args=${args}`;
+
+  const status = document.getElementById("sseStatus");
+  status.textContent = "● Verbinde…";
+  status.className   = "active";
+
+  const es = new EventSource(url);
+  sseSource = es;
+  es.onopen    = () => { status.textContent = `● Aktiv – ${type}.${method}`; log("info","SSE gestartet", `${type}.${method}`); };
+  es.onmessage = e  => log("sse", "SSE", e.data);
+  es.onerror   = () => { status.textContent = "● Fehler / Getrennt"; status.className = ""; es.close(); };
+}
+
+function stopSSE() {
+  if (sseSource) { sseSource.close(); sseSource = null; }
+  const s = document.getElementById("sseStatus");
+  s.textContent = "● Inaktiv";
+  s.className   = "";
+}
+
+// ── Output ────────────────────────────────────────────────────────────────────
+function log(type, label, content) {
+  const out = document.getElementById("output");
+  const ph  = out.querySelector(".placeholder");
+  if (ph) ph.remove();
+
+  const div = document.createElement("div");
+  div.className = "entry " + type;
+  const ts = new Date().toLocaleTimeString("de-DE", { hour12: false });
+  const pre = document.createElement("pre");
+  pre.textContent = content;
+  div.innerHTML = `<span class="ts">${ts}</span><span class="lbl">${label}</span>`;
+  div.appendChild(pre);
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function clearOutput() {
+  document.getElementById("output").innerHTML = `
+    <div class="placeholder">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+      </svg>
+      <p>Klasse aus der Seitenleiste wählen</p>
+    </div>`;
+  counters = { total: 0, ok: 0, err: 0, pend: 0 };
+  updateCounters();
+}
+
+function updateCounters() {
+  document.getElementById("cTotal").textContent = counters.total;
+  document.getElementById("cOk").textContent    = counters.ok;
+  document.getElementById("cErr").textContent   = counters.err;
+  document.getElementById("cPend").textContent  = counters.pend;
+}
+
+document.addEventListener("DOMContentLoaded", initSseSelects);
+</script>
+</body>
+</html>
